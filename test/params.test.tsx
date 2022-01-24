@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { createDialog, TDialogProps } from '../src';
+import { createDialog, DialogProps } from '../src';
 
 describe('params', () => {
   type DialogParams = {
@@ -9,7 +9,7 @@ describe('params', () => {
     param2: string;
   };
 
-  const Modal: React.FC<TDialogProps<DialogParams>> = ({
+  const Modal: React.FC<DialogProps<DialogParams>> = ({
     isOpen,
     onClose,
     onResult,
@@ -24,7 +24,7 @@ describe('params', () => {
         Modal
         <div>{param1}</div>
         <div>{param2}</div>
-        <button onClick={onResult}>OK</button>
+        <button onClick={() => onResult()}>OK</button>
         <button onClick={onClose}>Close</button>
       </div>
     );

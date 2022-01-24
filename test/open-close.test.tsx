@@ -1,20 +1,20 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { createDialog, TDialogProps } from '../src';
+import { createDialog, DialogProps } from '../src';
 
 describe('open-close', () => {
   const onResult = jest.fn();
   const onClose = jest.fn();
 
-  const Modal: React.FC<TDialogProps<{}>> = ({ isOpen, onClose, onResult }) => {
+  const Modal: React.FC<DialogProps<{}>> = ({ isOpen, onClose, onResult }) => {
     if (!isOpen) {
       return null;
     }
     return (
       <div>
         Modal
-        <button onClick={onResult}>OK</button>
+        <button onClick={() => onResult()}>OK</button>
         <button onClick={onClose}>Close</button>
       </div>
     );
@@ -22,6 +22,7 @@ describe('open-close', () => {
 
   const { useDialog, DialogProvider, useDialogAsync } = createDialog({
     DialogView: Modal,
+    defaultParams: {},
   });
 
   const Child = () => {

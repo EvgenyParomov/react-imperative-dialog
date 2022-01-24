@@ -1,24 +1,28 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { createDialog, TDialogProps } from '../src';
+import { createDialog, DialogProps } from '../src';
 
 describe('params', () => {
   type DialogParams = { externalResult: string };
-  type DialogResult = string;
+  type DialogResult = string | undefined;
 
   const onResult = jest.fn();
 
-  const Modal: React.FC<TDialogProps<DialogParams, DialogResult>> = ({
+  const Modal: React.FC<DialogProps<DialogParams, DialogResult>> = ({
     isOpen,
     onClose,
     onResult,
     externalResult,
-    setResult,
-    result,
   }) => {
+    const [result, setResult] = React.useState<string>();
     const handleChangeResult = () => {
       setResult(externalResult);
+    };
+
+    const handleResult = () => {
+      onResult(result);
+      setResult(undefined);
     };
 
     if (!isOpen) {
@@ -29,7 +33,7 @@ describe('params', () => {
         Modal
         <div>{result}</div>
         <button onClick={handleChangeResult}>change result</button>
-        <button onClick={onResult}>OK</button>
+        <button onClick={handleResult}>OK</button>
         <button onClick={onClose}>Close</button>
       </div>
     );
@@ -40,7 +44,6 @@ describe('params', () => {
     defaultParams: {
       externalResult: 'externalResult',
     },
-    defaultResult: 'defaultResult',
   });
 
   const Child: React.FC<{ openParams?: Partial<DialogParams> }> = ({
@@ -77,7 +80,6 @@ describe('params', () => {
     );
 
     fireEvent.click(screen.getByText('Open dialog'));
-    expect(screen.queryByText('defaultResult')).not.toBeNull();
     fireEvent.click(screen.getByText('change result'));
     expect(screen.queryByText('externalResult')).not.toBeNull();
     fireEvent.click(screen.getByText('OK'));
@@ -92,7 +94,6 @@ describe('params', () => {
     );
 
     fireEvent.click(screen.getByText('Open async dialog'));
-    expect(screen.queryByText('defaultResult')).not.toBeNull();
     fireEvent.click(screen.getByText('change result'));
     expect(screen.queryByText('externalResult')).not.toBeNull();
     fireEvent.click(screen.getByText('OK'));
@@ -107,25 +108,7 @@ describe('params', () => {
     );
 
     fireEvent.click(screen.getByText('Open dialog'));
-    expect(screen.queryByText('defaultResult')).not.toBeNull();
     fireEvent.click(screen.getByText('OK'));
-    expect(onResult).toHaveBeenCalledWith('defaultResult');
-  });
-
-  test('result reset', () => {
-    render(
-      <DialogProvider>
-        <Child />
-      </DialogProvider>
-    );
-
-    fireEvent.click(screen.getByText('Open dialog'));
-    expect(screen.queryByText('defaultResult')).not.toBeNull();
-    fireEvent.click(screen.getByText('change result'));
-    expect(screen.queryByText('externalResult')).not.toBeNull();
-    fireEvent.click(screen.getByText('Close'));
-    fireEvent.click(screen.getByText('Open dialog'));
-    expect(screen.queryByText('defaultResult')).not.toBeNull();
-    expect(onResult).toHaveBeenCalledWith('defaultResult');
+    expect(onResult).toHaveBeenCalledWith(undefined);
   });
 });
