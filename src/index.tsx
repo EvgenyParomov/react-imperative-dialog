@@ -1,2 +1,2 @@
 export { createDialog } from './createDialog';
-export { TDialogProps } from './types';
+export { DialogProps } from './types';

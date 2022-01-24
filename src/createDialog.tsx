@@ -1,34 +1,20 @@
 import * as React from 'react';
 import {
-  TOpenDialog,
-  TOpenDialogAsync,
-  TValueCallback,
-  TCreateDialogResult,
-  TDialogProps,
+  OpenDialog,
+  OpenDialogAsync,
+  ValueCallback,
+  CreateDialogResult,
+  DialogProps,
 } from './types';
 
-export function createDialog(params: {
-  DialogView: React.FC<TDialogProps>;
-}): TCreateDialogResult;
-export function createDialog<P extends {}>(params: {
-  DialogView: React.FC<TDialogProps<P>>;
-  defaultParams: P;
-}): TCreateDialogResult<P>;
-export function createDialog<P extends {}, R = void>(params: {
-  DialogView: React.FC<TDialogProps<P, R>>;
-  defaultParams: P;
-  defaultResult: R;
-}): TCreateDialogResult<P, R>;
-export function createDialog<P extends {} = {}, R = void>({
+export function createDialog<P extends {}, R = void>({
   defaultParams = {} as P,
   DialogView,
-  defaultResult,
 }: {
-  DialogView: React.FC<TDialogProps<P, R>>;
-  defaultParams?: P;
-  defaultResult?: R;
-}): TCreateDialogResult<P, R> {
-  const context = React.createContext<TOpenDialog<P, R> | null>(null);
+  DialogView: React.FC<DialogProps<P, R>>;
+  defaultParams: P;
+}): CreateDialogResult<P, R> {
+  const context = React.createContext<OpenDialog<P, R> | null>(null);
 
   const useDialog = () => {
     const open = React.useContext(context);
@@ -39,7 +25,7 @@ export function createDialog<P extends {} = {}, R = void>({
     return open;
   };
 
-  const useDialogAsync = (): TOpenDialogAsync<P, R> => {
+  const useDialogAsync = (): OpenDialogAsync<P, R> => {
     const open = useDialog();
     return React.useCallback(
       ({ throwOnClose, ...params } = {}) =>
@@ -66,11 +52,10 @@ export function createDialog<P extends {} = {}, R = void>({
       ...defaultParams,
       ...rootParams,
     });
-    const [result, setResult] = React.useState(defaultResult as R);
 
     const handlers = React.useRef<{
-      onResult: TValueCallback<R>;
-      onClose: TValueCallback;
+      onResult: ValueCallback<R>;
+      onClose: ValueCallback;
     }>({
       onResult: () => {},
       onClose: () => {},
@@ -81,21 +66,23 @@ export function createDialog<P extends {} = {}, R = void>({
       handlers.current = { onClose: noop, onResult: noop };
     }, []);
 
-    const handleResult = React.useCallback(() => {
-      handlers.current.onResult(result);
-      reset();
-    }, [result, reset]);
+    const handleResult = React.useCallback(
+      (result: R) => {
+        handlers.current.onResult(result);
+        reset();
+      },
+      [reset]
+    );
 
     const handleClose = React.useCallback(() => {
       handlers.current.onClose();
       reset();
     }, [reset]);
 
-    const open: TOpenDialog<P, R> = React.useCallback(
+    const open: OpenDialog<P, R> = React.useCallback(
       ({ params, onClose = noop, onResult = noop }) => {
         setIsOpen(true);
         setParams({ ...defaultParams, ...rootParamsRef.current, ...params });
-        setResult(defaultResult as R);
         handlers.current = {
           onClose,
           onResult,
@@ -110,8 +97,6 @@ export function createDialog<P extends {} = {}, R = void>({
           isOpen={isOpen}
           onResult={handleResult}
           onClose={handleClose}
-          result={result}
-          setResult={setResult}
           {...params}
         />
         <context.Provider value={open}>{children}</context.Provider>
