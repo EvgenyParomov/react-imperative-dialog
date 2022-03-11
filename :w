@@ -2,31 +2,35 @@ import * as React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import { DialogViewProps, createDialog } from '../../../dist';
 
-type Settings = {
+type ConfirmationModalProps = DialogViewProps<{
   params: {
     description: string;
   };
-};
+}>;
 
-const ConfirmationModal: React.FC<DialogViewProps<Settings>> = ({
+const ConfirmationModal: React.FC<DialogProps<Props>> = ({
   description,
   isOpen,
   onResult,
   onClose,
 }) => {
+  const handleClose = () => onClose();
+  const handleResult = () => onResult();
   return (
     <Modal show={isOpen} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Confirm action</Modal.Title>
       </Modal.Header>
+
       <Modal.Body>
         <p>{description}</p>
       </Modal.Body>
+
       <Modal.Footer>
-        <Button onClick={onClose} variant="secondary">
+        <Button onClick={handleClose} variant="secondary">
           Cancel
         </Button>
-        <Button onClick={onResult} variant="primary">
+        <Button onClick={handleResult} variant="primary">
           Accept
         </Button>
       </Modal.Footer>

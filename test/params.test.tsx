@@ -1,15 +1,17 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { createDialog, DialogProps } from '../src';
+import { createDialog, DialogViewProps } from '../src';
 
 describe('params', () => {
-  type DialogParams = {
-    param1: string;
-    param2: string;
-  };
+  type ModalProps = DialogViewProps<{
+    params: {
+      param1: string;
+      param2: string;
+    };
+  }>;
 
-  const Modal: React.FC<DialogProps<DialogParams>> = ({
+  const Modal: React.FC<ModalProps> = ({
     isOpen,
     onClose,
     onResult,
@@ -38,9 +40,12 @@ describe('params', () => {
     },
   });
 
-  const Child: React.FC<{ openParams?: Partial<DialogParams> }> = ({
-    openParams,
-  }) => {
+  const Child: React.FC<{
+    openParams?: Partial<{
+      param1: string;
+      param2: string;
+    }>;
+  }> = ({ openParams }) => {
     const openCallback = useDialog();
     const openAsyncDialog = useDialogAsync();
 

@@ -1,14 +1,17 @@
 import { nanoid } from 'nanoid';
 import * as React from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
-import { DialogProps, createDialog } from '../../../dist';
+import { createDialog, DialogViewProps } from '../../../dist';
 import { TodoTaskItem } from '../types/TodoTaskItem';
 
-type Props = {
-  defaultTask?: TodoTaskItem;
+type DialogSettings = {
+  params: {
+    defaultTask?: TodoTaskItem;
+  };
+  result: TodoTaskItem;
 };
 
-const TodoParamsModal: React.FC<DialogProps<Props, TodoTaskItem>> = ({
+const TodoParamsModal: React.FC<DialogViewProps<DialogSettings>> = ({
   isOpen,
   onResult,
   onClose,
@@ -29,7 +32,6 @@ const TodoParamsModal: React.FC<DialogProps<Props, TodoTaskItem>> = ({
         <Modal.Header closeButton>
           <Modal.Title>Create todo item</Modal.Title>
         </Modal.Header>
-
         <Modal.Body>
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Title</Form.Label>
@@ -41,7 +43,6 @@ const TodoParamsModal: React.FC<DialogProps<Props, TodoTaskItem>> = ({
             />
           </Form.Group>
         </Modal.Body>
-
         <Modal.Footer>
           <Button onClick={onClose} variant="secondary">
             Cancel

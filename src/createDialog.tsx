@@ -1,20 +1,23 @@
 import * as React from 'react';
 import {
-  OpenDialog,
-  OpenDialogAsync,
-  ValueCallback,
+  CreateDialogParams,
   CreateDialogResult,
-  DialogProps,
+  SettingsParams,
+  OpenDialog,
+  SettingsResult,
+  SettingsOnResult,
+  OpenDialogAsync,
+  Callback,
 } from './types';
 
-export function createDialog<P extends {}, R = void>({
-  defaultParams = {} as P,
-  DialogView,
-}: {
-  DialogView: React.FC<DialogProps<P, R>>;
-  defaultParams: P;
-}): CreateDialogResult<P, R> {
-  const context = React.createContext<OpenDialog<P, R> | null>(null);
+export function createDialog<S>(
+  params: CreateDialogParams<S>
+): CreateDialogResult<S> {
+  const defaultParams =
+    (params as { defaultParams?: SettingsParams<S> }).defaultParams ?? {};
+  const DialogView = params.DialogView;
+
+  const context = React.createContext<OpenDialog<S> | null>(null);
 
   const useDialog = () => {
     const open = React.useContext(context);
@@ -25,14 +28,14 @@ export function createDialog<P extends {}, R = void>({
     return open;
   };
 
-  const useDialogAsync = (): OpenDialogAsync<P, R> => {
+  const useDialogAsync = (): OpenDialogAsync<S> => {
     const open = useDialog();
     return React.useCallback(
       ({ throwOnClose, ...params } = {}) =>
-        new Promise<R>((res, rej) => {
+        new Promise((res, rej) => {
           open({
-            params: params as Partial<P>,
-            onResult: res,
+            params: params as Partial<SettingsParams<S>>,
+            onResult: res as SettingsOnResult<S>,
             onClose: throwOnClose ? rej : undefined,
           });
         }),
@@ -40,7 +43,7 @@ export function createDialog<P extends {}, R = void>({
     );
   };
 
-  const DialogProvider: React.FC<Partial<P>> = ({
+  const DialogProvider: React.FC<Partial<SettingsParams<S>>> = ({
     children,
     ...rootParams
   }) => {
@@ -48,26 +51,29 @@ export function createDialog<P extends {}, R = void>({
     rootParamsRef.current = rootParams;
 
     const [isOpen, setIsOpen] = React.useState(false);
-    const [params, setParams] = React.useState({
+    const [dialogParams, setDialogParams] = React.useState({
       ...defaultParams,
       ...rootParams,
-    });
+    } as SettingsParams<S>);
 
-    const handlers = React.useRef<{
-      onResult: ValueCallback<R>;
-      onClose: ValueCallback;
-    }>({
-      onResult: () => {},
-      onClose: () => {},
+    const handlers = React.useRef({
+      onResult: noop,
+      onClose: noop,
+    } as {
+      onResult: SettingsOnResult<S>;
+      onClose: Callback;
     });
 
     const reset = React.useCallback(() => {
       setIsOpen(false);
-      handlers.current = { onClose: noop, onResult: noop };
+      handlers.current = {
+        onClose: noop,
+        onResult: noop as SettingsOnResult<S>,
+      };
     }, []);
 
     const handleResult = React.useCallback(
-      (result: R) => {
+      (result: SettingsResult<S>) => {
         handlers.current.onResult(result);
         reset();
       },
@@ -79,10 +85,14 @@ export function createDialog<P extends {}, R = void>({
       reset();
     }, [reset]);
 
-    const open: OpenDialog<P, R> = React.useCallback(
-      ({ params, onClose = noop, onResult = noop }) => {
+    const open = React.useCallback(
+      ({ params, onClose = noop, onResult = noop } = {}) => {
         setIsOpen(true);
-        setParams({ ...defaultParams, ...rootParamsRef.current, ...params });
+        setDialogParams({
+          ...defaultParams,
+          ...rootParamsRef.current,
+          ...params,
+        });
         handlers.current = {
           onClose,
           onResult,
@@ -95,9 +105,9 @@ export function createDialog<P extends {}, R = void>({
       <>
         <DialogView
           isOpen={isOpen}
-          onResult={handleResult}
+          onResult={handleResult as SettingsOnResult<S>}
           onClose={handleClose}
-          {...params}
+          {...dialogParams}
         />
         <context.Provider value={open}>{children}</context.Provider>
       </>
@@ -110,4 +120,5 @@ export function createDialog<P extends {}, R = void>({
     DialogProvider,
   };
 }
+
 const noop = () => {};
